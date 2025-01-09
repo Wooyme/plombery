@@ -15,11 +15,9 @@ from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
 from .schemas import PipelineRunStatus  # noqa F401
 from ._version import __version__  # noqa F401
 
-
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 _logger.addHandler(logging.StreamHandler())
-
 
 if os.getenv("DEBUG_APS"):
     logging.basicConfig()
@@ -36,6 +34,9 @@ class _Plombery:
 
     def register_pipeline(self, pipeline: Pipeline):
         orchestrator.register_pipeline(pipeline)
+
+    def unregister_pipeline(self, pipeline_id: str):
+        orchestrator.unregister_pipeline(pipeline_id)
 
     def add_notification_rule(self, notification: NotificationRule):
         notification_manager.register_rule(notification)
@@ -68,12 +69,12 @@ def get_app():
 
 
 def register_pipeline(
-    id: str,
-    tasks: List[Task],
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    params: Optional[Type[BaseModel]] = None,
-    triggers: Optional[List[Trigger]] = None,
+        id: str,
+        tasks: List[Task],
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        params: Optional[Type[BaseModel]] = None,
+        triggers: Optional[List[Trigger]] = None,
 ):
     pipeline = Pipeline(
         id=id,
@@ -85,3 +86,7 @@ def register_pipeline(
     )
 
     _app.register_pipeline(pipeline)
+
+
+def unregister_pipeline(pipeline_id: str):
+    _app.unregister_pipeline(pipeline_id)

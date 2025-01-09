@@ -59,6 +59,16 @@ class _Orchestrator:
         it returns None if the pipeline is not found"""
         return self._all_pipelines.get(pipeline_id)
 
+    def unregister_pipeline(self, pipeline_id: str):
+        pipeline = self._all_pipelines.pop(pipeline_id, None)
+        if pipeline is None:
+            return
+
+        for trigger in pipeline.triggers:
+            job_id = get_job_id(pipeline_id, trigger.id)
+            self.scheduler.remove_job(job_id)
+            self._all_triggers.pop(job_id, None)
+
     @property
     def pipelines(self):
         return self._all_pipelines
@@ -83,7 +93,7 @@ orchestrator = _Orchestrator()
 
 
 async def run_pipeline_now(
-    pipeline: Pipeline, trigger: Optional[Trigger] = None, params: Any = None
+        pipeline: Pipeline, trigger: Optional[Trigger] = None, params: Any = None
 ) -> PipelineRun:
     trigger_id = trigger.id if trigger else MANUAL_TRIGGER_ID
 
