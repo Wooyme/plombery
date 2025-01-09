@@ -9,7 +9,6 @@ from plombery.orchestrator import orchestrator, run_pipeline_now
 from plombery.pipeline.pipeline import Pipeline
 from plombery.pipeline.trigger import Trigger
 
-
 router = APIRouter(prefix="/pipelines", tags=["Pipelines"], dependencies=[NeedsAuth])
 
 
@@ -65,7 +64,14 @@ class PipelineRunInput(BaseModel):
 async def run_pipeline(pipeline_id: str, body: PipelineRunInput) -> PipelineRun:
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
-
+    if pipeline.params and body.params:
+        try:
+            pipeline.params.model_validate(body.params)
+        except ValidationError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=exc.errors(),
+            )
     if body.trigger_id:
         triggers = [
             trigger for trigger in pipeline.triggers if trigger.id == body.trigger_id
@@ -77,16 +83,6 @@ async def run_pipeline(pipeline_id: str, body: PipelineRunInput) -> PipelineRun:
             )
 
         trigger = triggers[0]
-
-        return await run_pipeline_now(pipeline, trigger)
     else:
-        if pipeline.params:
-            try:
-                pipeline.params.model_validate(body.params)
-            except ValidationError as exc:
-                raise HTTPException(
-                    status_code=422,
-                    detail=exc.errors(),
-                )
-
-        return await run_pipeline_now(pipeline, params=body.params)
+        trigger = None
+    return await run_pipeline_now(pipeline, trigger=trigger, params=body.params)
