@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/mario-pipe-flower.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plombery</title>
+    <script>
+      if (
+        localStorage.plomberyTheme === 'dark' ||
+        (!('plomberyTheme' in localStorage) &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-86ef8bb9.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-3fad8192.js">
+    <link rel="stylesheet" href="/assets/index-4fe84deb.css">
+  </head>
+  <body class="overflow-y-scroll">
+    <div id="root"></div>
+    
+  </body>
+</html>
