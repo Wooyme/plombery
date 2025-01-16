@@ -3,7 +3,7 @@ import logging
 from plombery.logger.formatter import JsonFormatter
 from plombery.logger.web_socket_handler import queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
-from plombery.pipeline.context import task_context, run_context, pipeline_context
+from plombery.pipeline.context import task_context, run_context, pipeline_context, logger_context
 
 
 def get_logger() -> logging.LoggerAdapter:
@@ -18,7 +18,9 @@ def get_logger() -> logging.LoggerAdapter:
     pipeline = pipeline_context.get()
     task = task_context.get(None)
     pipeline_run = run_context.get()
-
+    exists_logger = logger_context.get(None)
+    if exists_logger:
+        return exists_logger
     filename = get_logs_filename(pipeline_run.id)
 
     json_formatter = JsonFormatter(pipeline=pipeline.id, task=task.id if task else None)
@@ -59,5 +61,14 @@ def get_logger() -> logging.LoggerAdapter:
         "run_id": pipeline_run.id,
         "task": task.id if task else None,
     }
+    logger_adapter = logging.LoggerAdapter(logger, extra_log_info)
+    logger_context.set(logger_adapter)
+    return logger_adapter
 
-    return logging.LoggerAdapter(logger, extra_log_info)
+
+def close_logger():
+    logger_adapter = logger_context.get()
+    if logger_adapter:
+        for handler in logger_adapter.logger.handlers:
+            handler.close()
+        logger_context.set(None)

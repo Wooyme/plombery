@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.exceptions import InvalidDataPath
-from plombery.logger import get_logger
+from plombery.logger import get_logger, close_logger
 from plombery.notifications import notification_manager
 from plombery.utils import run_all_coroutines
 from plombery.websocket import sio
@@ -40,7 +40,7 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
 
 
 def _on_pipeline_status_changed(
-    pipeline: Pipeline, pipeline_run: PipelineRun, status: PipelineRunStatus
+        pipeline: Pipeline, pipeline_run: PipelineRun, status: PipelineRunStatus
 ):
     update_pipeline_run(pipeline_run, utcnow(), status)
 
@@ -72,10 +72,10 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
 
 
 async def run(
-    pipeline: Pipeline,
-    trigger: Optional[Trigger] = None,
-    params: Optional[Dict[str, Any]] = None,
-    pipeline_run: Optional[PipelineRun] = None,
+        pipeline: Pipeline,
+        trigger: Optional[Trigger] = None,
+        params: Optional[Dict[str, Any]] = None,
+        pipeline_run: Optional[PipelineRun] = None,
 ):
     """
     This is the function that actually runs the pipeline, running all its tasks.
@@ -96,7 +96,6 @@ async def run(
     run_token = run_context.set(pipeline_run)
 
     logger = get_logger()
-
     logger.info(
         "Executing pipeline `%s` #%d via trigger `%s`",
         pipeline.id,
@@ -156,6 +155,7 @@ async def run(
 
     pipeline_context.reset(pipeline_token)
     run_context.reset(run_token)
+    close_logger()
 
 
 @dataclass
@@ -176,8 +176,8 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
 
     for name, parameter in inspect.signature(func).parameters.items():
         if (
-            parameter.kind == inspect.Parameter.POSITIONAL_ONLY
-            or inspect.Parameter.VAR_POSITIONAL
+                parameter.kind == inspect.Parameter.POSITIONAL_ONLY
+                or inspect.Parameter.VAR_POSITIONAL
         ) and name != "params":
             result.has_positional_args = True
         elif parameter.VAR_KEYWORD or (parameter.KEYWORD_ONLY and name == "params"):
@@ -187,9 +187,9 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
 
 
 async def _execute_task(
-    task: Task,
-    flowing_data,
-    params: Optional[BaseModel] = None,
+        task: Task,
+        flowing_data,
+        params: Optional[BaseModel] = None,
 ):
     result = check_task_signature(task.run)
 

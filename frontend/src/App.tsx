@@ -18,7 +18,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WebSocketContext>
-        <BrowserRouter>
+        <BrowserRouter basename={'/static/plombery'}>
           <AuthProvider>
             <Router />
           </AuthProvider>
